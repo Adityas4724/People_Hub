@@ -8,6 +8,7 @@ package com.peoplehub;
 // 2. Import Statements
 // ======================================================
 import java.util.Scanner;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 
