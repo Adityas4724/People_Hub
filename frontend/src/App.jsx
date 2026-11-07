@@ -1,6 +1,14 @@
+// ============================================================
+// 1. IMPORTS
+// React hooks and the configured API client used by this app.
+// ============================================================
 import { useEffect, useState } from 'react'
 import api from './api'
 
+// ============================================================
+// 2. ICON DEFINITIONS
+// SVG path data for the icons used in navigation and buttons.
+// ============================================================
 const P = {
   overview: 'M3 11l9-8 9 8M5 10v10h14V10', employees: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
   departments: 'M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4', attendance: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20M12 6v6l4 2',
@@ -10,6 +18,10 @@ const P = {
 }
 const Icon = ({ n }) => <svg className="ic" viewBox="0 0 24 24"><path d={P[n]} /></svg>
 
+// ============================================================
+// 3. HELPER FUNCTIONS
+// Format dates, times, currency, durations, names and errors.
+// ============================================================
 const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
 const fd = s => s ? pd(s).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 const ft = s => s ? new Date(s).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'
@@ -22,6 +34,11 @@ const month = m => m ? new Date(m + '-01T00:00').toLocaleDateString('en-IN', { m
 const cap = s => s[0].toUpperCase() + s.slice(1)
 const fail = (e, fb) => e.response?.data?.message || fb
 
+// ============================================================
+// 4. API ENDPOINTS AND DATA CONFIGURATION
+// Defines backend routes, role-based data requirements and
+// the initial values for application forms and stored data.
+// ============================================================
 const EP = { departments: '/departments', employees: '/employees', leaves: '/leaves', attendance: '/attendance', payroll: '/payroll', me: '/employees/me' }
 const needs = admin => ({
   overview: admin ? ['departments', 'employees', 'leaves', 'attendance'] : ['me', 'leaves', 'attendance', 'payroll'],
@@ -32,9 +49,18 @@ const EMPTY = { departments: [], employees: [], leaves: [], attendance: [], payr
 const NEW_EMP = { fullName: '', username: '', email: '', temporaryPassword: 'Welcome123!', designation: '', phone: '', joiningDate: '', departmentId: '' }
 const NEW_PAY = { employeeId: '', payMonth: '', basic: '', allowances: '0', deductions: '0', paidOn: '' }
 
+// ============================================================
+// 5. REUSABLE UI COMPONENTS
+// Small components shared across dashboard tables and dialogs.
+// ============================================================
 const Who = ({ name, sub }) => <div className="who"><span className="avatar">{ini(name)}</span><div>{name || '—'}{sub && <small>{sub}</small>}</div></div>
 const Badge = ({ s, cls }) => <span className={`badge ${cls || s}`}>{cap(s.toLowerCase())}</span>
 
+// ------------------------------------------------------------
+// 5A. TABLE COMPONENT
+// Displays searchable data tables, loading placeholders and
+// empty-state messages.
+// ------------------------------------------------------------
 function Table({ title, cols, rows, loading, empty, hint }) {
   const [q, setQ] = useState('')
   const shown = q ? rows.filter(r => JSON.stringify(r).toLowerCase().includes(q.toLowerCase())) : rows
@@ -58,6 +84,11 @@ function Table({ title, cols, rows, loading, empty, hint }) {
   )
 }
 
+// ------------------------------------------------------------
+// 5B. MODAL COMPONENT
+// Displays pop-up forms and dialogs; closes on Escape or
+// backdrop click.
+// ------------------------------------------------------------
 function Modal({ title, onClose, onSubmit, label, disabled, children }) {
   useEffect(() => { const k = e => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [])
   return (
@@ -74,6 +105,11 @@ function Modal({ title, onClose, onSubmit, label, disabled, children }) {
   )
 }
 
+// ============================================================
+// 6. MAIN APP COMPONENT
+// Holds application state and coordinates authentication,
+// dashboard navigation, data loading and user actions.
+// ============================================================
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('peoplehub_token'))
   const [user, setUser] = useState(localStorage.getItem('peoplehub_user') || '')
@@ -91,12 +127,22 @@ export default function App() {
   const [theme, setTheme] = useState(localStorage.getItem('peoplehub_theme') || 'light')
   const admin = role === 'ADMIN'
 
+  // ----------------------------------------------------------
+  // 6A. GLOBAL EFFECTS
+  // Applies the selected theme, clears notifications after a
+  // delay, and loads data when the active section changes.
+  // ----------------------------------------------------------
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('peoplehub_theme', theme) }, [theme])
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(null), 4500); return () => clearTimeout(t) } }, [toast])
   useEffect(() => { if (token) load() }, [section, token])
 
   const notify = (text, type = 'ok') => setToast({ text, type })
 
+  // ----------------------------------------------------------
+  // 6B. LOAD DASHBOARD DATA
+  // Requests the data needed for the current section and stores
+  // successful responses in application state.
+  // ----------------------------------------------------------
   async function load() {
     const keys = needs(admin)[section]
     setLoading(true)
@@ -114,10 +160,20 @@ export default function App() {
     setLoading(false)
   }
 
+  // ----------------------------------------------------------
+  // 6C. SHARED ACTION AND NOTIFICATION HANDLERS
+  // Runs API actions, displays success/error messages and
+  // refreshes the current section.
+  // ----------------------------------------------------------
   async function run(fn, ok, bad) {
     try { await fn(); notify(ok); await load(); return true } catch (e) { notify(fail(e, bad), 'err'); return false }
   }
 
+  // ----------------------------------------------------------
+  // 6D. AUTHENTICATION
+  // Signs in through the backend and saves the returned
+  // token, username and role in local storage.
+  // ----------------------------------------------------------
   async function signIn(e) {
     e.preventDefault(); setBusy(true); setLoginErr('')
     try {
@@ -128,11 +184,20 @@ export default function App() {
     setBusy(false)
   }
 
+  // ----------------------------------------------------------
+  // 6E. SIGN OUT
+  // Clears saved login information and resets app state.
+  // ----------------------------------------------------------
   function signOut() {
     ['token', 'user', 'role'].forEach(k => localStorage.removeItem('peoplehub_' + k))
     setToken(null); setUser(''); setRole(''); setStore(EMPTY); setForm(null)
   }
 
+  // ----------------------------------------------------------
+  // 6F. CRUD AND WORKFLOW HANDLERS
+  // Handles attendance actions, leave decisions, deletion,
+  // department creation and employee editing.
+  // ----------------------------------------------------------
   const act = (path, ok) => run(() => api.post(path), ok, 'Action failed.')
   const decide = (id, s) => run(() => api.patch(`/leaves/${id}/decision?status=${s}`), `Leave ${s.toLowerCase()}.`, `Could not ${s.toLowerCase()} the leave request.`)
   const ask = (text, onYes) => setConfirm({ text, onYes })
@@ -143,6 +208,10 @@ export default function App() {
   const open = (type, title, v) => setForm({ type, title, v })
   const set = (k, val) => setForm(f => ({ ...f, v: { ...f.v, [k]: val } }))
 
+  // ----------------------------------------------------------
+  // 6G. FORM SUBMISSION
+  // Sends employee, leave and payroll form data to the backend.
+  // ----------------------------------------------------------
   async function submit(e) {
     e.preventDefault()
     const { type, v } = form, dep = v.departmentId ? Number(v.departmentId) : null
@@ -155,6 +224,10 @@ export default function App() {
     if (await call()) setForm(null)
   }
 
+  // ==========================================================
+  // 7. LOGIN SCREEN
+  // Shown when no authentication token is stored.
+  // ==========================================================
   if (!token) return (
     <div className="login">
       <aside className="login-art">
@@ -177,6 +250,11 @@ export default function App() {
     </div>
   )
 
+  // ==========================================================
+  // 8. DASHBOARD DATA AND DISPLAY CONFIGURATION
+  // Prepares role-based navigation, dashboard statistics,
+  // greeting text, table columns and section headings.
+  // ==========================================================
   const { departments, employees, leaves, attendance, payroll, me } = store
   const nav = admin ? ['overview', 'employees', 'departments', 'attendance', 'leaves', 'payroll'] : ['overview', 'attendance', 'leaves', 'payroll']
   const rec = attendance.find(a => a.workDate === today())
@@ -194,6 +272,10 @@ export default function App() {
     leaves: ['Leave', admin ? 'Review and decide on requests' : 'Your leave requests'], payroll: ['Payroll', admin ? 'Monthly salary records' : 'Your payslips']
   }[section]
 
+  // ----------------------------------------------------------
+  // 8A. DASHBOARD ACTION BUTTONS
+  // Defines check-in/check-out and leave approval controls.
+  // ----------------------------------------------------------
   const checkBtns = <div className="hero-a">
     <button className="btn" disabled={!!rec?.checkIn} onClick={() => act('/attendance/check-in', 'Checked in.')}>Check in</button>
     <button className="btn ghost" disabled={!rec?.checkIn || !!rec?.checkOut} onClick={() => act('/attendance/check-out', 'Checked out.')}>Check out</button>
@@ -202,11 +284,19 @@ export default function App() {
     ? <div className="acts"><button className="btn sm ok" onClick={() => decide(l.id, 'APPROVED')}>Approve</button><button className="btn sm bad" onClick={() => decide(l.id, 'REJECTED')}>Reject</button></div>
     : <span className="muted">Decided</span>
 
+  // ----------------------------------------------------------
+  // 8B. FORM FIELD HELPERS AND PAY CALCULATIONS
+  // Builds reusable form inputs and calculates gross/net pay.
+  // ----------------------------------------------------------
   const v = form?.v || {}
   const F = (k, label, { full, ...p } = {}) => <label key={k} className={'field' + (full ? ' span2' : '')}>{label}<input value={v[k] ?? ''} onChange={e => set(k, e.target.value)} {...p} /></label>
   const Dep = <label className="field">Department<select value={v.departmentId} onChange={e => set('departmentId', e.target.value)}><option value="">No department</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label>
   const gross = Number(v.basic || 0) + Number(v.allowances || 0), net = gross - Number(v.deductions || 0)
 
+  // ==========================================================
+  // 9. MAIN APPLICATION LAYOUT
+  // Renders the sidebar, header, dashboard sections and dialogs.
+  // ==========================================================
   return (
     <>
       <aside className="sidebar">
@@ -234,6 +324,11 @@ export default function App() {
           </div>
         </header>
 
+                {/* ----------------------------------------------------
+            9A. OVERVIEW / DASHBOARD
+            Shows summary cards, leave activity, department
+            headcount or the employee's personal profile.
+        ----------------------------------------------------- */}
         {section === 'overview' && <>
           <div className="hero">
             <div><h2>{hello}, {me?.fullName?.split(' ')[0] || user}</h2><p>{admin ? `${present} of ${employees.length} employees have checked in today.` : `Today: ${status}`}</p></div>
@@ -264,11 +359,20 @@ export default function App() {
           </div>
         </>}
 
+                {/* ----------------------------------------------------
+            9B. EMPLOYEES SECTION
+            Lists employees and provides edit/delete actions.
+        ----------------------------------------------------- */}
         {section === 'employees' && <Table title="All employees" loading={loading} rows={employees} empty="No employees yet" hint="Use Add employee to create the first account." cols={[
           { h: 'Employee', c: r => <Who name={r.fullName} sub={r.employeeCode} /> }, { h: 'Designation', c: r => r.designation || '—' },
           { h: 'Department', c: r => r.department?.name || '—' }, { h: 'Phone', c: r => r.phone || '—' }, { h: 'Joined', c: r => fd(r.joiningDate) },
           { h: 'Actions', c: r => <div className="acts"><button className="btn sm" onClick={() => editEmp(r)}>Edit</button><button className="btn sm bad" onClick={() => delEmp(r)}>Delete</button></div> }]} />}
 
+                {/* ----------------------------------------------------
+            9C. DEPARTMENTS SECTION
+            Allows admins to add departments and view or delete
+            existing departments.
+        ----------------------------------------------------- */}
         {section === 'departments' && <>
           {admin && <form className="inline" onSubmit={addDept}><input placeholder="New department name" value={deptName} onChange={e => setDeptName(e.target.value)} required aria-label="Department name" /><button className="btn pri">Add department</button></form>}
           <Table title="All departments" loading={loading} rows={departments} empty="No departments yet" hint="Add your first department above." cols={[
@@ -277,20 +381,38 @@ export default function App() {
             ...(admin ? [{ h: 'Actions', c: r => <button className="btn sm bad" onClick={() => delDept(r)}>Delete</button> }] : [])]} />
         </>}
 
+                {/* ----------------------------------------------------
+            9D. ATTENDANCE SECTION
+            Displays employee attendance dates, check-in/out
+            times, worked hours and attendance status.
+        ----------------------------------------------------- */}
         {section === 'attendance' && <Table title="Attendance records" loading={loading} rows={sorted} empty="No attendance yet" hint={admin ? 'Records appear when employees check in.' : 'Check in to start today.'} cols={[
           ...adminCol, { h: 'Date', c: r => fd(r.workDate) }, { h: 'Check in', c: r => ft(r.checkIn) }, { h: 'Check out', c: r => ft(r.checkOut) }, { h: 'Hours', c: r => hrs(r.checkIn, r.checkOut) },
           { h: 'Status', c: r => r.checkOut ? <Badge s="Complete" cls="good" /> : r.checkIn ? <Badge s="Working" cls="warn" /> : <Badge s="Absent" cls="idle" /> }]} />}
 
+                {/* ----------------------------------------------------
+            9E. LEAVE MANAGEMENT SECTION
+            Displays leave requests and admin decision controls.
+        ----------------------------------------------------- */}
         {section === 'leaves' && <Table title="Leave requests" loading={loading} rows={leaves} empty="No leave requests" hint={admin ? 'Requests from employees will show here.' : 'Use Apply for leave to submit one.'} cols={[
           ...adminCol, { h: 'From', c: r => fd(r.startDate) }, { h: 'To', c: r => fd(r.endDate) }, { h: 'Days', c: r => span(r.startDate, r.endDate) },
           { h: 'Reason', cls: 'wrapcell', c: r => r.reason }, { h: 'Status', c: r => <Badge s={r.status} /> }, ...(admin ? [{ h: 'Decision', c: decideBtns }] : [])]} />}
 
+                {/* ----------------------------------------------------
+            9F. PAYROLL SECTION
+            Displays monthly salary details and payment status.
+        ----------------------------------------------------- */}
         {section === 'payroll' && <Table title="Payroll records" loading={loading} rows={payroll} empty="No payroll records" hint={admin ? 'Add a record for an employee to begin.' : 'Your payslips will appear here.'} cols={[
           ...adminCol, { h: 'Month', c: r => month(r.payMonth) }, { h: 'Basic', cls: 'num', c: r => inr(r.basic) }, { h: 'Allowances', cls: 'num', c: r => inr(r.allowances) },
           { h: 'Deductions', cls: 'num', c: r => inr(r.deductions) }, { h: 'Net pay', cls: 'num', c: r => <b>{inr(r.netPay)}</b> },
           { h: 'Paid on', c: r => r.paidOn ? fd(r.paidOn) : <Badge s="Unpaid" cls="warn" /> }]} />}
       </main>
 
+            {/* ------------------------------------------------------
+          10. CREATE / EDIT FORMS
+          Renders the correct employee, leave or payroll form
+          inside the reusable modal component.
+      ------------------------------------------------------- */}
       {form && <Modal title={form.title} onClose={() => setForm(null)} onSubmit={submit} label={{ 'emp-new': 'Create employee', 'emp-edit': 'Save changes', leave: 'Submit request', pay: 'Save payroll' }[form.type]} disabled={form.type === 'pay' && (!v.employeeId || net < 0)}>
         <div className="fgrid">
           {form.type === 'emp-new' && <>{F('fullName', 'Full name', { required: true })}{F('username', 'Username', { required: true })}{F('email', 'Email', { type: 'email', required: true })}{F('temporaryPassword', 'Temporary password', { required: true })}</>}
@@ -306,6 +428,10 @@ export default function App() {
         </div>
       </Modal>}
 
+            {/* ------------------------------------------------------
+          11. CONFIRMATION DIALOG AND TOAST NOTIFICATIONS
+          Confirms destructive actions and displays feedback.
+      ------------------------------------------------------- */}
       {confirm && <Modal title="Are you sure?" onClose={() => setConfirm(null)} onSubmit={e => { e.preventDefault(); confirm.onYes(); setConfirm(null) }} label="Yes, delete"><p className="muted">{confirm.text}</p></Modal>}
       {toast && <div className={'toast' + (toast.type === 'err' ? ' err' : '')} role="status">{toast.text}<button onClick={() => setToast(null)} aria-label="Dismiss"><Icon n="x" /></button></div>}
     </>

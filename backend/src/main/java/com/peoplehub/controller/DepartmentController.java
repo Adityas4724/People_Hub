@@ -1,6 +1,12 @@
-
+// ============================================================
+// 1. PACKAGE DECLARATION
+// ============================================================
 package com.peoplehub.controller;
 
+
+// ============================================================
+// 2. IMPORTS
+// ============================================================
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -19,27 +25,49 @@ import com.peoplehub.repository.DepartmentRepository;
 
 import jakarta.validation.Valid;
 
+
+// ============================================================
+// 3. REST CONTROLLER CONFIGURATION
+// ============================================================
 @RestController
 @RequestMapping("/api/departments")
 public class DepartmentController {
 
+    // ========================================================
+    // 4. DEPARTMENT REPOSITORY DECLARATION
+    // ========================================================
     private final DepartmentRepository repo;
 
+    // ========================================================
+    // 5. CONSTRUCTOR INJECTION
+    // ========================================================
     public DepartmentController(DepartmentRepository repo) {
         this.repo = repo;
     }
 
+    // ========================================================
+    // 6. GET ALL DEPARTMENTS API
+    // ========================================================
     @GetMapping
     public List<Department> all() {
         return repo.findAll();
     }
 
+    // ========================================================
+    // 7. CREATE DEPARTMENT API (ADMIN ONLY)
+    // ========================================================
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Department create(@Valid @RequestBody DepartmentRequest r) {
-        return repo.save(new Department(r.name(), r.description()));
+    public Department create(
+            @Valid @RequestBody DepartmentRequest r) {
+
+        return repo.save(
+                new Department(r.name(), r.description()));
     }
 
+    // ========================================================
+    // 8. DELETE DEPARTMENT API (ADMIN ONLY)
+    // ========================================================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
@@ -49,6 +77,7 @@ public class DepartmentController {
         }
 
         repo.deleteById(id);
+
         return ResponseEntity.noContent().build();
     }
 }

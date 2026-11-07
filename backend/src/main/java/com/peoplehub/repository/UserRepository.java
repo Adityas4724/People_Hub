@@ -1,9 +1,38 @@
+// ======================================================
+// 1. Package Declaration
+// ======================================================
 package com.peoplehub.repository;
-import com.peoplehub.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+
+
+// ======================================================
+// 2. Import Statements
+// ======================================================
 import java.util.Optional;
-public interface UserRepository extends JpaRepository<User,Long> {
- Optional<User> findByUsername(String username);
- boolean existsByUsername(String username);
- boolean existsByEmail(String email);
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.peoplehub.model.User;
+
+
+// ======================================================
+// 3. UserRepository Interface
+// ======================================================
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    // ==================================================
+    // 4. Find User by Username
+    // ==================================================
+    Optional<User> findByUsername(String username);
+
+
+    // ==================================================
+    // 5. Check Whether Username Already Exists
+    // ==================================================
+    boolean existsByUsername(String username);
+
+
+    // ==================================================
+    // 6. Check Whether Email Already Exists
+    // ==================================================
+    boolean existsByEmail(String email);
 }
