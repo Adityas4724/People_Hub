@@ -32,7 +32,7 @@ Open PowerShell in `backend` and set environment variables for this terminal:
 $env:DB_URL="jdbc:mysql://localhost:3306/peoplehub_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
 $env:DB_USERNAME="root"
 $env:DB_PASSWORD="YOUR_MYSQL_PASSWORD"
-$env:JWT_SECRET="UGVvcGxlSHViRGVtb1NlY3JldEtleUZvckpXVC0yMDI2"
+$env:JWT_SECRET="JWT_SECRET"
 $env:ADMIN_USERNAME="admin"
 $env:ADMIN_EMAIL="admin@peoplehub.local"
 $env:ADMIN_PASSWORD="ChangeThisAdmin123!"
