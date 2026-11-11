@@ -1,4 +1,9 @@
 # PeopleHub — Employee Management System
+<img width="949" height="437" alt="image" src="https://github.com/user-attachments/assets/448c648d-53b4-4b6a-aa2b-bc7762ab560f" />
+<img width="935" height="432" alt="image" src="https://github.com/user-attachments/assets/12f1f9ca-868c-4d79-a326-6bedfae51007" />
+<img width="941" height="438" alt="image" src="https://github.com/user-attachments/assets/08f09b45-ca18-46ea-a2d4-14978a2b27f8" />
+
+
 
 A college-project MVP built with React, Spring Boot, Java 21 and MySQL.
 
